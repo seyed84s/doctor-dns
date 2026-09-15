@@ -111,7 +111,7 @@ def panel_host():
 
 # Ports that belong to the service itself. Moving the panel onto one of them
 # takes down the thing it exists to administer.
-RESERVED_PORTS = {53: "DNS", 80: "HTTP", 443: "HTTPS",
+RESERVED_PORTS = {53: "DNS", 8080: "HTTP", 443: "HTTPS",
                   8443: "the relays' sync API",
                   8446: "the exit's route to Google over IPv6", 22: "SSH"}
 

@@ -44,7 +44,7 @@ opens a plain TCP tunnel to the exit, which does the same and connects to the
 real host. Nothing decrypts anything, and no certificate is presented to the
 client.
 
-Port 80 is forwarded rather than redirected, because Sony and Microsoft serve
+Port 8080 is forwarded rather than redirected, because Sony and Microsoft serve
 game packages over plain HTTP from Akamai edges that answer 443 with a
 certificate naming no console host at all.
 
@@ -189,7 +189,7 @@ can see, but a firewall rule you wrote yourself it cannot.
 | | relay (inside Iran) | exit (abroad) |
 |---|---|---|
 | **53** udp + tcp | dnsmasq, the address customers point at | — |
-| **80** tcp | forwarded abroad; also how certificates are proved | the same |
+| **8080** tcp | forwarded abroad; also how certificates are proved | the same |
 | **443** tcp | the SNI proxy | the same |
 | **3478** udp | STUN, so a console can work out its own NAT | — |
 | **8443** tcp | the customer panel — TLS only, so a relay without a certificate serves no panel at all | the sync API — it answers the relays and nobody else |
@@ -198,13 +198,13 @@ can see, but a firewall rule you wrote yourself it cannot.
 | **22** tcp | ssh — never gated, so a wrong allowlist cannot lock you out | the same |
 
 The admin panel is the one port you choose. It defaults to **9443** and can be
-anything free; the installer stops you at 22, 53, 80, 443, 8443, 8446 and the
+anything free; the installer stops you at 22, 53, 8080, 443, 8443, 8446 and the
 tunnel's port, and `smartdns-access port` applies the same rule later, plus a
 check that nothing else is already listening.
 
 Inbound, the relay is the machine customers reach, so its DNS, proxy, STUN and
 panel ports have to be open to the internet. The exit only ever hears from the
-relay and from you, so 80, 443, 8443 and the panel port are enough there.
+relay and from you, so 8080, 443, 8443 and the panel port are enough there.
 
 ### A tunnel between the relay and the exit (optional)
 

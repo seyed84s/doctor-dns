@@ -207,7 +207,7 @@ tunnel_port_problem() {
     case "$p" in
         22) echo "ssh" ;;
         53) echo "dns" ;;
-        80|443) echo "the proxy" ;;
+        8080|443) echo "the proxy" ;;
         8443) echo "the sync API and the customer panel" ;;
         8446) echo "the exit's route to Google over IPv6" ;;
         8402) echo "where certificates are proved" ;;
@@ -364,13 +364,13 @@ tunnel_toml() {
     printf '# written by the doctor dns installer - re-run it to change the tunnel\n'
     if [ "$TUNNEL_DIRECTION" = reverse ] && [ "$ROLE" = relay ]; then
         printf '[server]\nbind_addr = "0.0.0.0:%s"\n' "$TUNNEL_PORT"
-        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=80"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
+        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=8080"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
         [ -n "$c" ] && printf 'tls_cert = "%s"\ntls_key = "%s"\n' "$c" "$k"
     elif [ "$TUNNEL_DIRECTION" = reverse ]; then
         printf '[client]\nremote_addr = "%s:%s"\n' "$RELAY_IP" "$TUNNEL_PORT"
     elif [ "$ROLE" = relay ]; then
         printf '[direct]\nrole = "iran"\naddr = "%s:%s"\n' "$EXIT_IP" "$TUNNEL_PORT"
-        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=80"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
+        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=8080"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
     else
         printf '[direct]\nrole = "kharej"\naddr = "0.0.0.0:%s"\n' "$TUNNEL_PORT"
         [ -n "$c" ] && printf 'tls_cert = "%s"\ntls_key = "%s"\n' "$c" "$k"
@@ -1151,7 +1151,7 @@ fi
 if [ "$ROLE" = relay ] && [ "$TUNNEL" = backpack ]; then
     NO_TUNNEL=""; EXIT_HTTPS=to_exit_https; EXIT_HTTP=to_exit_http
 else
-    NO_TUNNEL=1; EXIT_HTTPS="$EXIT_IP:443"; EXIT_HTTP="$EXIT_IP:80"
+    NO_TUNNEL=1; EXIT_HTTPS="$EXIT_IP:443"; EXIT_HTTP="$EXIT_IP:8080"
 fi
 if [ "$ROLE" = relay ]; then
     install_payload RELAY_NGINX /etc/nginx/nginx.conf && NGINX_CHANGED=1 || true
@@ -1528,7 +1528,7 @@ EOF
                     warn "these ports are taken - do not pick one of them:"
                     warn "    22    ssh"
                     warn "    53    dns"
-                    warn "    80    the proxy, and how certificates are proved"
+                    warn "  8080    the proxy"
                     warn "   443    the proxy"
                     warn "  8443    the sync API the relays connect to"
                     warn "  8446    the exit's own route to Google over IPv6"
@@ -1556,8 +1556,8 @@ EOF
                 22) die "port 22 is ssh" ;;
                 8443) die "port 8443 is the sync API the relays connect to" ;;
                 8446) die "port 8446 is the exit's own route to Google over IPv6" ;;
-                53|80|443) die "port $ADMIN_PORT is the service's own - pick
-    another. 22, 53, 80, 443, 8443 and 8446 are all taken." ;;
+                53|8080|443) die "port $ADMIN_PORT is the service's own - pick
+    another. 22, 53, 8080, 443, 8443 and 8446 are all taken." ;;
                 "${TUNNEL_PORT:-none}") die "port $ADMIN_PORT carries the tunnel - pick another" ;;
             esac
             # The path stays generated. Nobody types it from memory, and an
@@ -1987,7 +1987,7 @@ exit 0
 ## Two separate reasons a name lands here. Both were found in real packet
 ## captures, and each cost a broken game before it was understood.
 ##
-## 1. The service is not on TCP 443. The relay listens only on 80 and 443, so
+## 1. The service is not on TCP 443. The relay listens only on 8080 and 443, so
 ##    pointing such a name at it makes the client fire SYNs into a void and retry
 ##    forever. EA's game stack is full of these:
 ##
@@ -2113,18 +2113,18 @@ exit 0
 #    #   assets1.xboxlive.com        -> ... -> ...edgesuite.net
 #    #
 #    # Those edges answer port 443 with a generic a248.e.akamai.net certificate
-#    # that names no console host at all. Redirecting port 80 to https, as this
+#    # that names no console host at all. Redirecting port 8080 to https, as this
 #    # file used to, therefore sent the console to a certificate it correctly
 #    # refused. On the PS5 that was eight TLS alerts and a dead download; on the
 #    # Xbox it was a download that never started at all, with the console
 #    # re-resolving assets1.xboxlive.com dozens of times a minute.
 #    #
 #    # Forward these over HTTP instead of redirecting. Scoped to the console
-#    # domains deliberately: the relay's port 80 is open to the internet, and a
+#    # domains deliberately: the relay's port 8080 is open to the internet, and a
 #    # forward proxy that accepted any Host would be an open proxy.
 #    server {
-#        listen 80;
-#        listen [::]:80;
+#        listen 8080;
+#        listen [::]:8080;
 #        server_name ~^.*\.(playstation\.(net|com)|xboxlive\.com|gamepass\.com)$;
 #        allow __RELAY_IP__;
 #        # The tunnel, when there is one: its end on this machine hands each
@@ -2161,8 +2161,8 @@ exit 0
 #
 #    # Everything else keeps the old behaviour.
 #    server {
-#        listen 80 default_server;
-#        listen [::]:80 default_server;
+#        listen 8080 default_server;
+#        listen [::]:8080 default_server;
 #        server_name _;
 #        return 301 https://$host$request_uri;
 #    }
@@ -2256,7 +2256,7 @@ exit 0
 #    }
 #    upstream to_exit_http {
 #        server 127.0.0.1:18080;
-#        server __EXIT_IP__:80 backup;
+#        server __EXIT_IP__:8080 backup;
 #    }
 #    # tunnel end
 #
@@ -2267,13 +2267,13 @@ exit 0
 #        proxy_pass __EXIT_HTTPS__;
 #    }
 #
-#    # Port 80 is forwarded rather than answered. It used to return a 301 to
+#    # Port 8080 is forwarded rather than answered. It used to return a 301 to
 #    # https here, which broke PlayStation downloads: their CDN is HTTP-only and
 #    # serves a mismatched certificate on 443, so the console followed our
 #    # redirect straight into a TLS failure. The exit decides what to do with
 #    # each Host now - proxying playstation traffic, redirecting the rest.
 #    server {
-#        listen 80;
+#        listen 8080;
 #        proxy_connect_timeout 10s;
 #        proxy_timeout 10m;
 #        proxy_pass __EXIT_HTTP__;
@@ -2416,7 +2416,7 @@ exit 0
 #    echo "relay target   : $(grep -oE 'proxy_pass [0-9.]+:443' /etc/nginx/nginx.conf | awk '{print $2}')"
 #    echo
 #    echo "listeners:"
-#    ss -tulnp | grep -E ':53 |:80 |:443 ' | awk '{print "  " $1, $5, $NF}'
+#    ss -tulnp | grep -E ':53 |:8080 |:443 ' | awk '{print "  " $1, $5, $NF}'
 #    ;;
 #  *)
 #    echo "usage: smartdns {add|del|bypass|unbypass|list|find|test|status} [domain ...]"
@@ -2502,7 +2502,7 @@ exit 0
 #    chain count_in {
 #        type filter hook input priority 10 ; policy accept ;
 #        ip saddr @allowed udp dport 53 update @up { ip saddr counter }
-#        ip saddr @allowed tcp dport { 53, 80, 443 } update @up { ip saddr counter }
+#        ip saddr @allowed tcp dport { 53, 8080, 443 } update @up { ip saddr counter }
 #    }
 #
 #    # What we send back. nginx talks to the exit node as a local process, from
@@ -2511,7 +2511,7 @@ exit 0
 #    chain count_out {
 #        type filter hook output priority 10 ; policy accept ;
 #        ip daddr @allowed udp sport 53 update @down { ip daddr counter }
-#        ip daddr @allowed tcp sport { 53, 80, 443 } update @down { ip daddr counter }
+#        ip daddr @allowed tcp sport { 53, 8080, 443 } update @down { ip daddr counter }
 #    }
 #
 #    # Amplification defence, unchanged. An open resolver is worth roughly its
@@ -2813,7 +2813,7 @@ exit 0
 #add rule inet smartdns gate iif "lo" accept
 #
 #add rule inet smartdns gate ip saddr != @allowed udp dport 53 drop
-#add rule inet smartdns gate ip saddr != @allowed tcp dport { 53, 80, 443 } drop
+#add rule inet smartdns gate ip saddr != @allowed tcp dport { 53, 8080, 443 } drop
 #RULES
 #        nft flush chain $TABLE gate
 #        nft -f "$ENFORCE" || { rm -f "$ENFORCE"; die "nft refused the rules; nothing changed"; }
@@ -4967,7 +4967,7 @@ exit 0
 #would see whatever their browser came out of.
 #
 #It listens outside the gated ports on purpose. The access control gate covers
-#53, 80 and 443, so somebody whose address changed is cut off from the service
+#53, 8080 and 443, so somebody whose address changed is cut off from the service
 #but can still reach the one page that fixes it. Putting the panel on a gated
 #port would have locked them out of the thing that unlocks them.
 #
@@ -5002,7 +5002,7 @@ exit 0
 #SHAPE = "/usr/local/bin/smartdns-shape"
 #INTERVAL = 30
 ## The customer-facing panel, and the only port it is ever served on. Outside
-## the gated ports (53, 80, 443) on purpose: somebody whose address changed is
+## the gated ports (53, 8080, 443) on purpose: somebody whose address changed is
 ## cut off from the service but must still be able to reach the one page that
 ## fixes it.
 #PANEL_TLS_PORT = 8443
@@ -6655,7 +6655,7 @@ exit 0
 ##        smartdns-cert --renew         renew everything due (the timer's job)
 ##
 ## Port 80 is the problem this script exists to work around. Let's Encrypt's
-## HTTP-01 challenge needs it, and on a relay port 80 is forwarded whole to the
+## HTTP-01 challenge needs it, and on a relay port 8080 is forwarded whole to the
 ## exit node so that console downloads work: Sony and Microsoft serve game
 ## packages over plain HTTP from Akamai edges that answer 443 with a certificate
 ## naming no console host at all. Rebuilding nginx to terminate HTTP and answer
@@ -6922,7 +6922,7 @@ exit 0
 #
 ## Ports that belong to the service itself. Moving the panel onto one of them
 ## takes down the thing it exists to administer.
-#RESERVED_PORTS = {53: "DNS", 80: "HTTP", 443: "HTTPS",
+#RESERVED_PORTS = {53: "DNS", 8080: "HTTP", 443: "HTTPS",
 #                  8443: "the relays' sync API",
 #                  8446: "the exit's route to Google over IPv6", 22: "SSH"}
 #
@@ -8793,7 +8793,7 @@ exit 0
 #    # These belong to the service itself. Moving the panel onto one of them
 #    # would take down the thing it is meant to administer.
 #    case "$new" in
-#        53|80|443) die "port $new is the service's own - pick another" ;;
+#        53|8080|443) die "port $new is the service's own - pick another" ;;
 #        8443) die "port 8443 is the sync API the relays talk to" ;;
 #        8446) die "port 8446 is the exit's own route to Google over IPv6" ;;
 #        22) die "port 22 is ssh" ;;

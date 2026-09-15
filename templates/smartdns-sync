@@ -14,7 +14,7 @@ matters is the one they reach the service from. A page served in Frankfurt
 would see whatever their browser came out of.
 
 It listens outside the gated ports on purpose. The access control gate covers
-53, 80 and 443, so somebody whose address changed is cut off from the service
+53, 8080 and 443, so somebody whose address changed is cut off from the service
 but can still reach the one page that fixes it. Putting the panel on a gated
 port would have locked them out of the thing that unlocks them.
 
@@ -49,7 +49,7 @@ ACL = "/usr/local/bin/smartdns-acl"
 SHAPE = "/usr/local/bin/smartdns-shape"
 INTERVAL = 30
 # The customer-facing panel, and the only port it is ever served on. Outside
-# the gated ports (53, 80, 443) on purpose: somebody whose address changed is
+# the gated ports (53, 8080, 443) on purpose: somebody whose address changed is
 # cut off from the service but must still be able to reach the one page that
 # fixes it.
 PANEL_TLS_PORT = 8443

@@ -5,7 +5,7 @@
 #        smartdns-cert --renew         renew everything due (the timer's job)
 #
 # Port 80 is the problem this script exists to work around. Let's Encrypt's
-# HTTP-01 challenge needs it, and on a relay port 80 is forwarded whole to the
+# HTTP-01 challenge needs it, and on a relay port 8080 is forwarded whole to the
 # exit node so that console downloads work: Sony and Microsoft serve game
 # packages over plain HTTP from Akamai edges that answer 443 with a certificate
 # naming no console host at all. Rebuilding nginx to terminate HTTP and answer

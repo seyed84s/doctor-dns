@@ -89,7 +89,7 @@ server=/%s/8.8.8.8
     echo "relay target   : $(grep -oE 'proxy_pass [0-9.]+:443' /etc/nginx/nginx.conf | awk '{print $2}')"
     echo
     echo "listeners:"
-    ss -tulnp | grep -E ':53 |:80 |:443 ' | awk '{print "  " $1, $5, $NF}'
+    ss -tulnp | grep -E ':53 |:8080 |:443 ' | awk '{print "  " $1, $5, $NF}'
     ;;
   *)
     echo "usage: smartdns {add|del|bypass|unbypass|list|find|test|status} [domain ...]"

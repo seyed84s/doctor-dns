@@ -207,7 +207,7 @@ tunnel_port_problem() {
     case "$p" in
         22) echo "ssh" ;;
         53) echo "dns" ;;
-        80|443) echo "the proxy" ;;
+        8080|443) echo "the proxy" ;;
         8443) echo "the sync API and the customer panel" ;;
         8446) echo "the exit's route to Google over IPv6" ;;
         8402) echo "where certificates are proved" ;;
@@ -364,13 +364,13 @@ tunnel_toml() {
     printf '# written by the doctor dns installer - re-run it to change the tunnel\n'
     if [ "$TUNNEL_DIRECTION" = reverse ] && [ "$ROLE" = relay ]; then
         printf '[server]\nbind_addr = "0.0.0.0:%s"\n' "$TUNNEL_PORT"
-        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=80"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
+        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=8080"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
         [ -n "$c" ] && printf 'tls_cert = "%s"\ntls_key = "%s"\n' "$c" "$k"
     elif [ "$TUNNEL_DIRECTION" = reverse ]; then
         printf '[client]\nremote_addr = "%s:%s"\n' "$RELAY_IP" "$TUNNEL_PORT"
     elif [ "$ROLE" = relay ]; then
         printf '[direct]\nrole = "iran"\naddr = "%s:%s"\n' "$EXIT_IP" "$TUNNEL_PORT"
-        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=80"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
+        printf 'ports = ["127.0.0.1:%s=443", "127.0.0.1:%s=8080"]\n' "$TUNNEL_LOCAL_HTTPS" "$TUNNEL_LOCAL_HTTP"
     else
         printf '[direct]\nrole = "kharej"\naddr = "0.0.0.0:%s"\n' "$TUNNEL_PORT"
         [ -n "$c" ] && printf 'tls_cert = "%s"\ntls_key = "%s"\n' "$c" "$k"
@@ -1151,7 +1151,7 @@ fi
 if [ "$ROLE" = relay ] && [ "$TUNNEL" = backpack ]; then
     NO_TUNNEL=""; EXIT_HTTPS=to_exit_https; EXIT_HTTP=to_exit_http
 else
-    NO_TUNNEL=1; EXIT_HTTPS="$EXIT_IP:443"; EXIT_HTTP="$EXIT_IP:80"
+    NO_TUNNEL=1; EXIT_HTTPS="$EXIT_IP:443"; EXIT_HTTP="$EXIT_IP:8080"
 fi
 if [ "$ROLE" = relay ]; then
     install_payload RELAY_NGINX /etc/nginx/nginx.conf && NGINX_CHANGED=1 || true
@@ -1528,7 +1528,7 @@ EOF
                     warn "these ports are taken - do not pick one of them:"
                     warn "    22    ssh"
                     warn "    53    dns"
-                    warn "    80    the proxy, and how certificates are proved"
+                    warn "  8080    the proxy"
                     warn "   443    the proxy"
                     warn "  8443    the sync API the relays connect to"
                     warn "  8446    the exit's own route to Google over IPv6"
@@ -1556,8 +1556,8 @@ EOF
                 22) die "port 22 is ssh" ;;
                 8443) die "port 8443 is the sync API the relays connect to" ;;
                 8446) die "port 8446 is the exit's own route to Google over IPv6" ;;
-                53|80|443) die "port $ADMIN_PORT is the service's own - pick
-    another. 22, 53, 80, 443, 8443 and 8446 are all taken." ;;
+                53|8080|443) die "port $ADMIN_PORT is the service's own - pick
+    another. 22, 53, 8080, 443, 8443 and 8446 are all taken." ;;
                 "${TUNNEL_PORT:-none}") die "port $ADMIN_PORT carries the tunnel - pick another" ;;
             esac
             # The path stays generated. Nobody types it from memory, and an
